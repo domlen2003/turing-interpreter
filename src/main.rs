@@ -1,13 +1,14 @@
 use std::fs;
 use std::path::PathBuf;
-
 use clap::Parser;
+use crate::types::TuringDef;
 
-use turing::TuringDef;
+mod parse;
+mod types;
+mod verify;
+mod runner;
 
-mod turing;
-
-#[derive(Parser, Debug)]
+#[derive(clap::Parser, Debug)]
 #[clap(author = "Dominik Lenz", version, about)]
 /// A simple Turing Machine Interpreter
 struct Args {
@@ -15,13 +16,17 @@ struct Args {
     tm_def: PathBuf,
 }
 
-fn main() {
-    // Get the args and file
+
+fn main() -> anyhow::Result<()> {
+    // Get the args
     let args = Args::parse();
-    let def_string = fs::read_to_string(args.tm_def).expect("Could not read the TM definition file");
+    // Read the definition file
+    let def_string = fs::read_to_string(args.tm_def)?;
     // Parse the definition
-    let def = TuringDef::parse(&def_string).expect("Could not parse the TM definition");
+    let def = TuringDef::parse(&def_string)?;
     // Verify the definition
-    def.verify().expect("Could not verify the TM definition");
-    println!("{:?}", def);
+    def.verify()?;
+    // Run the machine
+    runner::run(def)?;
+    Ok(())
 }

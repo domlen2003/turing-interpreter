@@ -1,65 +1,43 @@
-#[derive(Debug)]
-pub struct TuringDef {
-    // n = #Q = #{q1, q2, ... , qn}
-    state_count: u8,
-    // Σ
-    input_alphabet: Vec<char>,
-    // Γ
-    tape_alphabet: Vec<char>,
-    // q0
-    start_state: u8,
-    // q^
-    end_state: u8,
-    // δ
-    transition_function: Vec<TransitionFunction>,
-}
+use thiserror::Error;
 
+use crate::parse::TuringParseError::InvalidTransitionFunction;
+use crate::parse::TuringTransitionError::{InvalidArgumentCount, InvalidInput, InvalidMove, InvalidNextState, InvalidState};
+use crate::types::{Move, TransitionFunction};
 
-#[derive(Debug)]
-struct TransitionFunction {
-    // q
-    state: u8,
-    // a
-    input: char,
-    // q'
-    next_state: u8,
-    // b
-    write: char,
-    // L, R or N
-    move_dir: Move,
-}
-
-#[derive(Debug)]
-enum Move {
-    Left,
-    Right,
-    None,
-}
-
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum TuringParseError {
-    //TODO: add more specific errors/args
+    #[error("Could not parse the state count")]
     InvalidStateCount,
+    #[error("Could not parse the alphabet")]
     InvalidInputAlphabet,
+    #[error("Could not parse the tape alphabet")]
     InvalidTapeAlphabet,
+    #[error("Could not parse the start state")]
     InvalidStartState,
+    #[error("Could not parse the end state")]
     InvalidEndState,
-    InvalidTransitionFunction,
+    #[error("Could not parse transition function {0}: {1}")]
+    InvalidTransitionFunction(usize, TuringTransitionError),
+    #[error("Invalid argument count")]
     InvalidArgumentCount,
 }
 
-#[derive(Debug)]
-pub enum TuringVerifyError {
+#[derive(Debug, Error)]
+pub enum TuringTransitionError {
+    #[error("Invalid argument count")]
+    InvalidArgumentCount,
+    #[error("Invalid state")]
+    InvalidState,
+    #[error("Invalid input")]
+    InvalidInput,
+    #[error("Invalid next state")]
+    InvalidNextState,
+    #[error("Invalid move")]
+    InvalidMove,
 }
 
-impl TuringDef {
-    /**
-     *Verifies the Turing Machine Definition to be valid (and consistent with itself)
-     */
-    pub fn verify() -> Result<(), TuringVerifyError> {
-        todo!("Implement this function")
-    }
 
+impl crate::types::TuringDef {
     /**
      *Parses a Turing Machine Definition from a string
      */
@@ -75,13 +53,12 @@ impl TuringDef {
         let tape_alphabet = Self::parse_alphabet(lines[2])?;
         let start_state = Self::parse_state(lines[3])?;
         let end_state = Self::parse_state(lines[4])?;
-
         let transition_function = lines[5..]
-            .iter()
-            .map(|&line| TransitionFunction::parse(line))
+            .iter().enumerate()
+            .map(|(pos, &line)| TransitionFunction::parse(pos, line))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(TuringDef {
+        Ok(crate::types::TuringDef {
             state_count,
             input_alphabet,
             tape_alphabet,
@@ -105,21 +82,21 @@ impl TuringDef {
 }
 
 impl TransitionFunction {
-    fn parse(line: &str) -> Result<Self, TuringParseError> {
+    fn parse(pos: usize, line: &str) -> Result<Self, TuringParseError> {
         let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() != 5 {
-            return Err(TuringParseError::InvalidTransitionFunction);
+            return Err(InvalidTransitionFunction(pos, InvalidArgumentCount));
         }
 
-        let state = parts[0].parse().map_err(|_| TuringParseError::InvalidTransitionFunction)?;
-        let input = parts[1].chars().next().ok_or(TuringParseError::InvalidTransitionFunction)?;
-        let next_state = parts[2].parse().map_err(|_| TuringParseError::InvalidTransitionFunction)?;
-        let write = parts[3].chars().next().ok_or(TuringParseError::InvalidTransitionFunction)?;
+        let state = parts[0].parse().map_err(|_| InvalidTransitionFunction(pos, InvalidState))?;
+        let input = parts[1].chars().next().ok_or(InvalidTransitionFunction(pos, InvalidInput))?;
+        let next_state = parts[2].parse().map_err(|_| InvalidTransitionFunction(pos, InvalidNextState))?;
+        let write = parts[3].chars().next().ok_or(InvalidTransitionFunction(pos, InvalidMove))?;
         let move_dir = match parts[4] {
             "L" => Move::Left,
             "R" => Move::Right,
             "N" => Move::None,
-            _ => return Err(TuringParseError::InvalidTransitionFunction),
+            _ => return Err(InvalidTransitionFunction(pos, InvalidMove)),
         };
 
         Ok(TransitionFunction {
