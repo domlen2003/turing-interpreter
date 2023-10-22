@@ -32,7 +32,7 @@ fn main() -> anyhow::Result<()> {
     let def = TuringDef::parse(&def_string)?;
     // Verify the definition
     def.verify()?;
-    println!("Verified definition: {}.", def);
+    println!("Verified definition:\n{}", def);
     // If an input tape was provided, run the machine
     if let Some(input) = args.input {
         println!("Running machine with input tape: {}.", input);

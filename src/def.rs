@@ -20,15 +20,15 @@ impl Display for TuringDef {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         f.write_str(&format!(
             "M = (\n  \
-                #Q: {},\n  \
+                Q: {},\n  \
                 Σ: {},\n  \
                 Γ: {},\n  \
-                B: 'B',\n  \
-                q0: {},\n  \
-                q^: {},\n  \
+                B: B,\n  \
+                q0: q{},\n  \
+                q^: q{},\n  \
                 δ: {}\n\
             )",
-            self.state_count,
+            fmt_state_count(self.state_count),
             fmt_char_vec(&self.input_alphabet),
             fmt_char_vec(&self.tape_alphabet),
             self.start_state,
@@ -38,8 +38,12 @@ impl Display for TuringDef {
     }
 }
 
+fn fmt_state_count(count: u8) -> String {
+    format!("{{{}}}", (1..=count).map(|x| format!("q{}", x)).collect::<Vec<_>>().join(", "))
+}
+
 fn fmt_char_vec(vec: &Vec<char>) -> String {
-    format!("{{{}}}", vec.iter().map(|x| format!("'{}'", x)).collect::<Vec<_>>().join(", "))
+    format!("{{{}}}", vec.iter().map(|x| format!("{}", x)).collect::<Vec<_>>().join(", "))
 }
 
 fn fmt_transition(vec: &Vec<TransitionFunction>) -> String {
