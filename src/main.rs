@@ -1,10 +1,16 @@
+use std::fmt::Display;
 use std::fs;
 use std::path::PathBuf;
+
 use clap::Parser;
-use crate::types::TuringDef;
+use log::warn;
+
+use runner::TuringRunner;
+
+use crate::def::TuringDef;
 
 mod parse;
-mod types;
+mod def;
 mod verify;
 mod runner;
 
@@ -14,6 +20,8 @@ mod runner;
 struct Args {
     #[arg(value_name = "TM-FILE")]
     tm_def: PathBuf,
+    #[arg(short, long, value_name = "INPUT-TAPE")]
+    input: Option<String>,
 }
 
 
@@ -26,7 +34,22 @@ fn main() -> anyhow::Result<()> {
     let def = TuringDef::parse(&def_string)?;
     // Verify the definition
     def.verify()?;
-    // Run the machine
-    runner::run(def)?;
+    println!("Verified definition: {}.", def);
+    // If an input tape was provided, run the machine
+    if let Some(input) = args.input {
+        println!("Running machine with input tape: {}.", input);
+        // Build a runner from the definition
+        let mut runner: TuringRunner = def.into();
+        // Load the tape and print initial state
+        runner.load_tape(&input);
+        println!("...{}...", runner);
+        // Run the machine
+        while !runner.is_halted() {
+            runner.step();
+            println!("...{}...", runner)
+        }
+    } else {
+        warn!("No input tape provided, skipping execution.")
+    }
     Ok(())
 }
