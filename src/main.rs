@@ -3,14 +3,10 @@ use std::path::PathBuf;
 
 use clap::Parser;
 
-use runner::TuringRunner;
+use turing::def::TuringDef;
+use turing::runner::TuringRunner;
 
-use crate::def::TuringDef;
-
-mod parse;
-mod def;
-mod verify;
-mod runner;
+mod turing;
 
 #[derive(clap::Parser, Debug)]
 #[clap(author = "Dominik Lenz", version, about)]
@@ -21,7 +17,6 @@ struct Args {
     #[arg(short, long, value_name = "INPUT-TAPE")]
     input: Option<String>,
 }
-
 
 fn main() -> anyhow::Result<()> {
     // Get the args

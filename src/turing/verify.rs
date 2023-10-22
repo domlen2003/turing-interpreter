@@ -1,11 +1,10 @@
 use thiserror::Error;
 
-use crate::def::TuringDef;
+use super::def::TuringDef;
 
 #[derive(Error, Debug)]
 #[error("Invalid transition function: State q{0} does not have a transition for input {1}")]
 pub struct TuringVerifyError(usize, char);
-
 
 impl TuringDef {
     /**

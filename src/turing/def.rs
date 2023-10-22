@@ -50,7 +50,6 @@ fn fmt_transition(vec: &Vec<TransitionFunction>) -> String {
     format!("{{\n    {}\n  }}", vec.iter().map(|x| format!("{}", x)).collect::<Vec<_>>().join(",\n    "))
 }
 
-
 #[derive(Debug)]
 pub struct TransitionFunction {
     // q

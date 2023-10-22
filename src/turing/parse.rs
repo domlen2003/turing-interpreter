@@ -1,8 +1,8 @@
 use thiserror::Error;
 
-use crate::parse::TuringParseError::InvalidTransitionFunction;
-use crate::parse::TuringTransitionError::{InvalidArgumentCount, InvalidInput, InvalidMove, InvalidNextState, InvalidState};
-use crate::def::{Move, TransitionFunction};
+use super::def::{Move, TransitionFunction, TuringDef};
+use super::parse::TuringParseError::InvalidTransitionFunction;
+use super::parse::TuringTransitionError::{InvalidArgumentCount, InvalidInput, InvalidMove, InvalidNextState, InvalidState};
 
 #[derive(Error, Debug)]
 pub enum TuringParseError {
@@ -32,8 +32,7 @@ pub enum TuringTransitionError {
     InvalidMove,
 }
 
-
-impl crate::def::TuringDef {
+impl TuringDef {
     /**
      *Parses a Turing Machine Definition from a string
      */
@@ -53,7 +52,7 @@ impl crate::def::TuringDef {
             .map(|(pos, &line)| TransitionFunction::parse(pos, line))
             .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(crate::def::TuringDef {
+        Ok(TuringDef {
             state_count,
             input_alphabet,
             tape_alphabet,

@@ -2,19 +2,12 @@ use std::cmp;
 use std::collections::BTreeMap;
 use std::fmt::{Display, Formatter};
 
-use crate::def::{Move, TuringDef};
+use super::def::{Move, TuringDef};
 
 struct Tape {
     tape: BTreeMap<isize, char>,
     head: isize,
 }
-
-pub struct TuringRunner {
-    def: TuringDef,
-    tape: Tape,
-    state: u8,
-}
-
 
 impl Tape {
     fn new() -> Self {
@@ -70,6 +63,11 @@ impl Tape {
     }
 }
 
+pub struct TuringRunner {
+    def: TuringDef,
+    tape: Tape,
+    state: u8,
+}
 
 impl TuringRunner {
     pub fn new(def: TuringDef) -> Self {
