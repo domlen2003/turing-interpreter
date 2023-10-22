@@ -81,7 +81,7 @@ impl TuringRunner {
     }
 
     pub fn load_tape(&mut self, value: &str) {
-        let mut tape = &mut self.tape;
+        let tape = &mut self.tape;
         for (i, c) in value.chars().enumerate() {
             if !self.def.input_alphabet.contains(&c) {
                 panic!("Invalid character {} in input tape", c);

@@ -8,10 +8,6 @@ use crate::def::{Move, TransitionFunction};
 pub enum TuringParseError {
     #[error("Could not parse the state count")]
     InvalidStateCount,
-    #[error("Could not parse the alphabet")]
-    InvalidInputAlphabet,
-    #[error("Could not parse the tape alphabet")]
-    InvalidTapeAlphabet,
     #[error("Could not parse the start state")]
     InvalidStartState,
     #[error("Could not parse the end state")]
@@ -48,13 +44,12 @@ impl crate::def::TuringDef {
             return Err(TuringParseError::InvalidArgumentCount);
         }
 
-        let state_count = Self::parse_state_count(lines[0])?;
-        let input_alphabet = Self::parse_alphabet(lines[1])?;
-        let tape_alphabet = Self::parse_alphabet(lines[2])?;
-        let start_state = Self::parse_state(lines[3])?;
-        let end_state = Self::parse_state(lines[4])?;
-        let transition_function = lines[5..]
-            .iter().enumerate()
+        let state_count = lines[0].parse().map_err(|_| TuringParseError::InvalidStateCount)?;
+        let input_alphabet = lines[1].chars().collect();
+        let tape_alphabet = lines[2].chars().collect();
+        let start_state = lines[3].parse().map_err(|_| TuringParseError::InvalidStartState)?;
+        let end_state = lines[4].parse().map_err(|_| TuringParseError::InvalidEndState)?;
+        let transition_function = lines[5..].iter().enumerate()
             .map(|(pos, &line)| TransitionFunction::parse(pos, line))
             .collect::<Result<Vec<_>, _>>()?;
 
@@ -66,18 +61,6 @@ impl crate::def::TuringDef {
             end_state,
             transition_function,
         })
-    }
-
-    fn parse_state_count(line: &str) -> Result<u8, TuringParseError> {
-        line.parse().map_err(|_| TuringParseError::InvalidStateCount)
-    }
-
-    fn parse_alphabet(line: &str) -> Result<Vec<char>, TuringParseError> {
-        Ok(line.chars().collect())
-    }
-
-    fn parse_state(line: &str) -> Result<u8, TuringParseError> {
-        line.parse().map_err(|_| TuringParseError::InvalidStartState)
     }
 }
 

@@ -1,9 +1,7 @@
-use std::fmt::Display;
 use std::fs;
 use std::path::PathBuf;
 
 use clap::Parser;
-use log::warn;
 
 use runner::TuringRunner;
 
@@ -49,7 +47,7 @@ fn main() -> anyhow::Result<()> {
             println!("...{}...", runner)
         }
     } else {
-        warn!("No input tape provided, skipping execution.")
+        println!("No input tape provided, skipping execution.")
     }
     Ok(())
 }
