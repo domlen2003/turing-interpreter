@@ -50,12 +50,17 @@ impl Tape {
      * and ending at the last non-'B' value, always including the head.
      */
     fn as_vec(&self) -> (Vec<&char>, isize) {
-        // find the min and max index of the tape
-        let max_tape = self.tape.keys().max().unwrap();
-        let min_tape = self.tape.keys().min().unwrap();
-        // find the min and max index of the tape and the head
-        let min = cmp::min(self.head, *min_tape);
-        let max = cmp::max(self.head, *max_tape);
+        // find the min and max index to display
+        let min = match self.tape.keys().min() {
+            // If there is a min index, take the min of the head and the min index
+            Some(&max_tape) => cmp::min(self.head, max_tape),
+            None => self.head,
+        };
+        let max = match self.tape.keys().max() {
+            // If there is a max index, take the max of the head and the max index
+            Some(&max_tape) => cmp::max(self.head, max_tape),
+            None => self.head,
+        };
         // create a vector of all values in the tape from min to max
         let vec = (min..=max).map(|i| self.tape.get(&i).unwrap_or(&'B')).collect::<Vec<_>>();
         // return the vector and the offset of the first value from 0 position (the min index)
@@ -82,6 +87,7 @@ impl TuringRunner {
         let tape = &mut self.tape;
         for (i, c) in value.chars().enumerate() {
             if !self.def.input_alphabet.contains(&c) {
+                //TODO: instead of panicking, return an error
                 panic!("Invalid character {} in input tape", c);
             }
             tape.insert(i as isize, c);
@@ -91,11 +97,13 @@ impl TuringRunner {
     pub fn step(&mut self) {
         let current = self.tape.get();
         let transition = self.def.transition_function.iter()
-            .find(|&x| x.state == self.state && x.input == *current)
-            .unwrap();
-        self.tape.set(transition.write);
-        self.tape.apply_move(&transition.move_dir);
-        self.state = transition.next_state;
+            .find(|&x| x.state == self.state && x.input == *current);
+        // Theoretically, a None is possible but should never happen when validation of def and gape is run
+        if let Some(transition) = transition {
+            self.tape.set(transition.write);
+            self.tape.apply_move(&transition.move_dir);
+            self.state = transition.next_state;
+        }
     }
 
     pub fn is_halted(&self) -> bool {
