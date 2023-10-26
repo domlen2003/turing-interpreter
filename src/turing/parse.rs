@@ -43,7 +43,7 @@ impl TuringDef {
     pub fn parse(value: &str) -> Result<Self, TuringParseError> {
         let lines = value.lines()
             // Remove comments and empty lines
-            .filter(|&line| !line.starts_with("#") || line.is_empty())
+            .filter(|&line| !line.starts_with("#") && !line.is_empty())
             .collect::<Vec<_>>();
 
         if lines.len() < 5 {
@@ -91,7 +91,7 @@ impl TransitionFunction {
             // fail transition
             let state = parts[0].parse().map_err(|_| InvalidTransitionFunction(pos, InvalidState))?;
             let input = parts[1].chars().next().ok_or(InvalidTransitionFunction(pos, InvalidInput))?;
-            let fail = parts[2].parse().map_err(|_| InvalidTransitionFunction(pos, InvalidArgumentCount))?;
+            let fail = parts[2].chars().next().ok_or(InvalidTransitionFunction(pos, InvalidArgumentCount))?;
             if fail != '-' {
                 return Err(InvalidTransitionFunction(pos, InvalidFailState));
             }
