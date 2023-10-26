@@ -72,14 +72,16 @@ pub struct TuringRunner {
     def: TuringDef,
     tape: Tape,
     state: u8,
+    small_output: bool,
 }
 
 impl TuringRunner {
-    pub fn new(def: TuringDef) -> Self {
+    pub fn new(def: TuringDef, small_output: bool) -> Self {
         Self {
             tape: Tape::new(),
             state: def.start_state.clone(),
             def,
+            small_output,
         }
     }
 
@@ -121,17 +123,15 @@ impl Display for TuringRunner {
         let (vec, offset) = self.tape.as_vec();
         for (index, &c) in vec.iter().enumerate() {
             if index as isize + offset == self.tape.head {
-                f.write_str(&format!("[q{}]({})", self.state, c))?;
+                if self.small_output {
+                    f.write_str(&format!("({}){}", self.state, c))?;
+                } else {
+                    f.write_str(&format!("[q{}]({})", self.state, c))?;
+                }
             } else {
                 f.write_str(&format!("{}", c))?;
             }
         }
         Ok(())
-    }
-}
-
-impl From<TuringDef> for TuringRunner {
-    fn from(value: TuringDef) -> Self {
-        Self::new(value)
     }
 }

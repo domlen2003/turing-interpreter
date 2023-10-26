@@ -13,9 +13,17 @@ mod turing;
 /// A simple Turing Machine Interpreter
 struct Args {
     #[arg(value_name = "TM-FILE")]
+    /// The Turing Machine definition file to use
     tm_def: PathBuf,
-    #[arg(short, long, value_name = "INPUT-TAPE")]
+    #[arg(short, long)]
+    /// The input tape to run the machine with
     input: Option<String>,
+    #[arg(short, long, default_value = "false")]
+    /// Print the definition after parsing
+    verbose: bool,
+    #[arg(short, long, default_value = "false")]
+    /// Use a smaller output format when printing the tape
+    small_output: bool,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -27,19 +35,23 @@ fn main() -> anyhow::Result<()> {
     let def = TuringDef::parse(&def_string)?;
     // Verify the definition
     def.verify()?;
-    println!("Verified definition:\n{}", def);
+    if args.verbose {
+        println!("Verified definition:\n{}", def);
+    }
     // If an input tape was provided, run the machine
     if let Some(input) = args.input {
-        println!("Running machine with input tape: {}.", input);
+        if args.verbose {
+            println!("Running machine with input tape: {}.", input);
+        }
         // Build a runner from the definition
-        let mut runner: TuringRunner = def.into();
+        let mut runner = TuringRunner::new(def, args.small_output);
         // Load the tape and print initial state
         runner.load_tape(&input);
         println!("...{}...", runner);
         // Run the machine
         while !runner.is_halted() {
             runner.step();
-            println!("...{}...", runner)
+            println!("...{}...", runner);
         }
     } else {
         println!("No input tape provided, skipping execution.")
