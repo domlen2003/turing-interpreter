@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+use crate::turing::parse::TuringTransitionError::InvalidFailState;
+
 use super::def::{Move, TransitionFunction, TuringDef};
 use super::parse::TuringParseError::InvalidTransitionFunction;
 use super::parse::TuringTransitionError::{InvalidArgumentCount, InvalidInput, InvalidMove, InvalidNextState, InvalidState};
@@ -22,6 +24,8 @@ pub enum TuringParseError {
 pub enum TuringTransitionError {
     #[error("Invalid argument count")]
     InvalidArgumentCount,
+    #[error("Invalid fail state, (expected '-')")]
+    InvalidFailState,
     #[error("Invalid state")]
     InvalidState,
     #[error("Invalid input")]
@@ -37,7 +41,10 @@ impl TuringDef {
      *Parses a Turing Machine Definition from a string
      */
     pub fn parse(value: &str) -> Result<Self, TuringParseError> {
-        let lines = value.lines().collect::<Vec<_>>();
+        let lines = value.lines()
+            // Remove comments and empty lines
+            .filter(|&line| !line.starts_with("#") || line.is_empty())
+            .collect::<Vec<_>>();
 
         if lines.len() < 5 {
             return Err(TuringParseError::InvalidArgumentCount);
@@ -66,27 +73,31 @@ impl TuringDef {
 impl TransitionFunction {
     fn parse(pos: usize, line: &str) -> Result<Self, TuringParseError> {
         let parts: Vec<&str> = line.split_whitespace().collect();
-        if parts.len() != 5 {
-            return Err(InvalidTransitionFunction(pos, InvalidArgumentCount));
+
+        if parts.len() == 5 {
+            // normal transition parsing
+            let state = parts[0].parse().map_err(|_| InvalidTransitionFunction(pos, InvalidState))?;
+            let input = parts[1].chars().next().ok_or(InvalidTransitionFunction(pos, InvalidInput))?;
+            let next_state = parts[2].parse().map_err(|_| InvalidTransitionFunction(pos, InvalidNextState))?;
+            let write = parts[3].chars().next().ok_or(InvalidTransitionFunction(pos, InvalidMove))?;
+            let move_dir = match parts[4] {
+                "L" => Move::Left,
+                "R" => Move::Right,
+                "N" => Move::None,
+                _ => return Err(InvalidTransitionFunction(pos, InvalidMove)),
+            };
+            Ok(TransitionFunction::new(state, input, next_state, write, move_dir))
+        } else if parts.len() == 3 {
+            // fail transition
+            let state = parts[0].parse().map_err(|_| InvalidTransitionFunction(pos, InvalidState))?;
+            let input = parts[1].chars().next().ok_or(InvalidTransitionFunction(pos, InvalidInput))?;
+            let fail = parts[2].parse().map_err(|_| InvalidTransitionFunction(pos, InvalidArgumentCount))?;
+            if fail != '-' {
+                return Err(InvalidTransitionFunction(pos, InvalidFailState));
+            }
+            Ok(TransitionFunction::new_fail(state, input))
+        } else {
+            Err(InvalidTransitionFunction(pos, InvalidArgumentCount))
         }
-
-        let state = parts[0].parse().map_err(|_| InvalidTransitionFunction(pos, InvalidState))?;
-        let input = parts[1].chars().next().ok_or(InvalidTransitionFunction(pos, InvalidInput))?;
-        let next_state = parts[2].parse().map_err(|_| InvalidTransitionFunction(pos, InvalidNextState))?;
-        let write = parts[3].chars().next().ok_or(InvalidTransitionFunction(pos, InvalidMove))?;
-        let move_dir = match parts[4] {
-            "L" => Move::Left,
-            "R" => Move::Right,
-            "N" => Move::None,
-            _ => return Err(InvalidTransitionFunction(pos, InvalidMove)),
-        };
-
-        Ok(TransitionFunction {
-            state,
-            input,
-            next_state,
-            write,
-            move_dir,
-        })
     }
 }

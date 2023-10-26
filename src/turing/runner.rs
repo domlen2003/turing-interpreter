@@ -100,6 +100,11 @@ impl TuringRunner {
             .find(|&x| x.state == self.state && x.input == *current);
         // Theoretically, a None is possible but should never happen when validation of def and gape is run
         if let Some(transition) = transition {
+            if transition.fail_state {
+                eprintln!("Turing Machine entered fail state, bad program: This state should never be reached.");
+                self.state = self.def.end_state;
+                return;
+            }
             self.tape.set(transition.write);
             self.tape.apply_move(&transition.move_dir);
             self.state = transition.next_state;

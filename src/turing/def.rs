@@ -62,6 +62,32 @@ pub struct TransitionFunction {
     pub write: char,
     // L, R or N
     pub move_dir: Move,
+    // fail state
+    pub fail_state: bool,
+}
+
+impl TransitionFunction {
+    pub(crate) fn new(state: u8, input: char, next_state: u8, write: char, move_dir: Move) -> Self {
+        TransitionFunction {
+            state,
+            input,
+            next_state,
+            write,
+            move_dir,
+            fail_state: false,
+        }
+    }
+
+    pub(crate) fn new_fail(state: u8, input: char) -> Self {
+        TransitionFunction {
+            state,
+            input,
+            next_state: state,
+            write: input,
+            move_dir: Move::None,
+            fail_state: true,
+        }
+    }
 }
 
 impl Display for TransitionFunction {
