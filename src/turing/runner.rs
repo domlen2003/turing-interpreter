@@ -76,11 +76,11 @@ pub struct TuringRunner {
 }
 
 impl TuringRunner {
-    pub fn new(def: TuringDef, small_output: bool) -> Self {
+    pub fn new(def: &TuringDef, small_output: bool) -> Self {
         Self {
             tape: Tape::new(),
             state: def.start_state.clone(),
-            def,
+            def: def.clone(),
             small_output,
         }
     }

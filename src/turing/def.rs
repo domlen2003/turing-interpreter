@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TuringDef {
     // n = #Q = #{q1, q2, ... , qn}
     pub state_count: u8,
@@ -50,7 +50,7 @@ fn fmt_transition(vec: &Vec<TransitionFunction>) -> String {
     format!("{{\n    {}\n  }}", vec.iter().map(|x| format!("{}", x)).collect::<Vec<_>>().join(",\n    "))
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct TransitionFunction {
     // q
     pub state: u8,
@@ -96,7 +96,7 @@ impl Display for TransitionFunction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Move {
     Left,
     Right,
